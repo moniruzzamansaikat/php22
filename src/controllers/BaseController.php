@@ -37,7 +37,7 @@ abstract class BaseController
     protected function redirect(string $url)
     {
         header("Location: $url");
-        exit;
+        exit();
     }
 
     /**
@@ -58,6 +58,6 @@ abstract class BaseController
         }
 
         echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-        exit;
+        exit();
     }
 }
