@@ -6,6 +6,8 @@ class Validator
 {
     private $errors = [];
 
+    private $errorsKey = 'errors';
+
     /**
      * Validate a single field is not empty.
      *
@@ -54,5 +56,19 @@ class Validator
     public function passes(): bool
     {
         return empty($this->errors);
+    }
+
+    /**
+     * Flass errors to an an array
+     */
+    public function flashErrors()
+    {
+        $array = array();
+
+        foreach ($this->errors() as $field => $error) {
+            $array[] = $error;
+        }
+
+        Flash::set($this->errorsKey, $array);
     }
 }

@@ -37,12 +37,15 @@
         </div>
     <?php endif; ?>
 
-    <?php if ($message = Php22\Utils\Flash::get('password')): ?>
+    <?php if ($errors = Php22\Utils\Flash::get('errors')): ?>
         <div class="alert alert-danger">
-            <?php echo htmlspecialchars($message, ENT_QUOTES, 'UTF-8'); ?>
+            <ul>
+                <?php foreach ($errors as $field => $message): ?>
+                    <li><?php echo htmlspecialchars($message, ENT_QUOTES, 'UTF-8'); ?></li>
+                <?php endforeach; ?>
+            </ul>
         </div>
     <?php endif; ?>
-
 
 
     <div class="card mb-3">

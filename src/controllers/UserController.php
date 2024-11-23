@@ -38,11 +38,8 @@ class UserController extends BaseController
         $validator->validate($rules, $data);
 
         if (!$validator->passes()) {
-            foreach ($validator->errors() as $field => $error) {
-                Flash::set($field, $error);
-            }
+            $validator->flashErrors();
             $this->redirect('/users');
-            return;
         }
 
         Database::table('users')->insert([

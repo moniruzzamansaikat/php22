@@ -15,12 +15,15 @@
         </div>
     #endif
 
-    #if ($message = Php22\Utils\Flash::get('password'))
+    #if ($errors = Php22\Utils\Flash::get('errors'))
         <div class="alert alert-danger">
-            {{ $message }}
+            <ul>
+                #foreach ($errors as $field => $message)
+                    <li>{{ $message }}</li>
+                #endforeach
+            </ul>
         </div>
     #endif
-
 
 
     <div class="card mb-3">

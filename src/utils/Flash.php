@@ -8,10 +8,10 @@ class Flash
      * Set a flash message.
      *
      * @param string $key
-     * @param string $message
+     * @param mixed $message
      * @return void
      */
-    public static function set(string $key, string $message)
+    public static function set(string $key, mixed $message)
     {
         if (!isset($_SESSION)) {
             session_start();
@@ -24,9 +24,9 @@ class Flash
      * Get a flash message.
      *
      * @param string $key
-     * @return string|null
+     * @return mixed
      */
-    public static function get(string $key): ?string
+    public static function get(string $key): mixed
     {
         if (!isset($_SESSION)) {
             session_start();
