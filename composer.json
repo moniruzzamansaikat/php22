@@ -1,0 +1,13 @@
+{
+    "version": "1.0.0",
+    "name": "php22/framework",
+    "autoload": {
+        "psr-4": {
+            "Php22\\": "src/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "require": {}
+}
