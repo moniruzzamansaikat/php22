@@ -6,7 +6,8 @@
             "Php22\\": "src/"
         },
         "files": [
-            "src/helpers.php"
+            "src/helpers.php",
+            "src/frame/framework_helpers.php"
         ]
     },
     "require": {}
