@@ -51,8 +51,16 @@
     <div class="card mb-3">
         <div class="card-body">
             <form method="post" action="/users">
-                <label class="form-label" for="username">Username</label>
-                <input class="form-control" autofocus name="username" id="username" />
+                <div class="form-group">
+                    <label class="form-label" for="username">Username</label>
+                    <input class="form-control" autofocus name="username" id="username" />
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input class="form-control" autofocus name="password" id="password" />
+                </div>
+
                 <button class="btn btn-sm btn-primary mt-2" type="submit">Submit</button>
             </form>
         </div>
