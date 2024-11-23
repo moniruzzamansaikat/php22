@@ -26,20 +26,15 @@ class UserController extends BaseController
         $this->render('users/create');
     }
 
-    public function store()
+    public function store(Request $request, Validator $validator)
     {
-        $request   = new Request();
-        $validator = new Validator();
-
         $username = $request->input('username');
         $validator->required('username', $username, 'Username is required.');
 
         if (!$validator->passes()) {
-            
             foreach ($validator->errors() as $field => $error) {
                 Flash::set($field, $error);
             }
-
             $this->redirect('/users');
             return;
         }
@@ -49,7 +44,6 @@ class UserController extends BaseController
         ]);
 
         Flash::set('success', 'User added successfully!');
-
         $this->redirect('/users');
     }
 }
