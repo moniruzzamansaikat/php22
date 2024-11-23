@@ -20,3 +20,7 @@ function flash() {
 function db() {
     return new Database();
 }
+
+function hash_password(string $password) {
+    return password_hash($password, PASSWORD_DEFAULT);
+}

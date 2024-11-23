@@ -32,7 +32,7 @@ class UserController extends BaseController
 
         db()->tbl('users')->insert([
             'username' => $data['username'],
-            'password' => password_hash($data['password'], PASSWORD_DEFAULT),
+            'password' => hash_password($data['password']),
         ]);
 
         flash()->set('success', 'User added successfully!');
