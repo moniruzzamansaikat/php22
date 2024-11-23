@@ -4,7 +4,7 @@
     <h2>User List X</h2>
     <ul>
         #foreach ($users as $user)
-            <li>{{ $user['name'] }}</li>
+            <li>{{ $user['username'] }}</li>
         #endforeach
     </ul>
 

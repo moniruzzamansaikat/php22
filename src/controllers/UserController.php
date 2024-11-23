@@ -2,15 +2,15 @@
 
 namespace Php22\Controllers;
 
+use Php22\Db\Database;
+
 class UserController extends BaseController
 {
     public function index()
     {
-        $users = [
-            ['name' => 'Alice'],
-            ['name' => 'Bob'],
-            ['name' => 'Charlie']
-        ];
+        $users = Database::table('users')
+            ->select(['id', 'username'])
+            ->get();
 
         $this->render('users/index', [
             'users' => $users,

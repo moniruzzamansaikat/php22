@@ -2,11 +2,15 @@
 
 namespace Php22\Controllers;
 
+use Php22\Db\Database;
 use Php22\TemplateEngine;
 
 abstract class BaseController
 {
     protected $templateEngine;
+
+    protected $db;
+
 
     public function __construct()
     {
@@ -14,6 +18,8 @@ abstract class BaseController
             __DIR__ . '/../views',  // Path to views folder
             __DIR__ . '/../cache'  // Path to cache folder
         );
+
+        $this->db = Database::getConnection();
     }
 
     /**

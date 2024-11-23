@@ -26,7 +26,7 @@
     <h2>User List X</h2>
     <ul>
         <?php foreach ($users as $user): ?>
-            <li><?php echo htmlspecialchars($user['name'], ENT_QUOTES, 'UTF-8'); ?></li>
+            <li><?php echo htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8'); ?></li>
         <?php endforeach; ?>
     </ul>
 
