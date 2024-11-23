@@ -6,6 +6,8 @@ class ProductController extends BaseController
 {
     public function index()
     {
-        echo "This is the ProductController index method.";
+        $this->json([
+            "test" => "ok"
+        ]);
     }
 }
