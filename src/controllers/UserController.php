@@ -3,6 +3,7 @@
 namespace Php22\Controllers;
 
 use Php22\Db\Database;
+use Php22\Http\Request;
 use Php22\Utils\Flash;
 use Php22\Utils\Validator;
 
@@ -27,29 +28,27 @@ class UserController extends BaseController
 
     public function store()
     {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $validator = new Validator();
+        $request   = new Request();
+        $validator = new Validator();
 
-            $username = $_POST['username'] ?? null;
-            $validator->required('username', $username, 'Username is required.');
+        $username = $request->input('username');
+        $validator->required('username', $username, 'Username is required.');
 
-            if (!$validator->passes()) {
-                foreach ($validator->errors() as $field => $error) {
-                    Flash::set($field, $error);
-                }
-
-                $this->redirect('/users');
-                return;
+        if (!$validator->passes()) {
+            
+            foreach ($validator->errors() as $field => $error) {
+                Flash::set($field, $error);
             }
 
-            Database::table('users')->insert([
-                'username' => $username,
-            ]);
-
-            Flash::set('success', 'User added successfully!');
-
             $this->redirect('/users');
+            return;
         }
+
+        Database::table('users')->insert([
+            'username' => $username,
+        ]);
+
+        Flash::set('success', 'User added successfully!');
 
         $this->redirect('/users');
     }
