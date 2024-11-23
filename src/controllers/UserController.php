@@ -2,14 +2,13 @@
 
 namespace Php22\Controllers;
 
-use Php22\Db\Database;
 use Php22\Http\Request;
 
 class UserController extends BaseController
 {
     public function index()
     {
-        $users = Database::table('users')
+        $users = db()->table('users')
             ->select(['id', 'username'])
             ->get();
 
@@ -31,7 +30,7 @@ class UserController extends BaseController
             'password' => 'required',
         ]);
 
-        Database::table('users')->insert([
+        db()->tbl('users')->insert([
             'username' => $data['username'],
             'password' => password_hash($data['password'], PASSWORD_DEFAULT),
         ]);
