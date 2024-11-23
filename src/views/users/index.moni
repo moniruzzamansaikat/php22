@@ -1,7 +1,30 @@
 #extends('layouts/main')
 
 #section('content')
-    <h2>User List X</h2>
+<h2>{{ $appName }}</h2>
+
+    #if ($successMessage = Php22\Utils\Flash::get('success'))
+        <div class="alert alert-success">
+            {{ $successMessage }}
+        </div>
+    #endif
+
+    #if ($usernameError = \Php22\Utils\Flash::get('username'))
+        <div class="alert alert-danger">
+            {{ $usernameError }}
+        </div>
+    #endif
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="post" action="/users">
+                <label class="form-label" for="username">Username</label>
+                <input class="form-control" autofocus name="username" id="username" />
+                <button class="btn btn-sm btn-primary mt-2" type="submit">Submit</button>
+            </form>
+        </div>
+    </div>
+
     <ul>
         #foreach ($users as $user)
             <li>{{ $user['username'] }}</li>

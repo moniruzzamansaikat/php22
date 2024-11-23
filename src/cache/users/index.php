@@ -23,7 +23,30 @@
   </div>
 
   <main class="container">
-    <h2>User List X</h2>
+    <h2><?php echo htmlspecialchars($appName, ENT_QUOTES, 'UTF-8'); ?></h2>
+
+    <?php if ($successMessage = Php22\Utils\Flash::get('success')): ?>
+        <div class="alert alert-success">
+            <?php echo htmlspecialchars($successMessage, ENT_QUOTES, 'UTF-8'); ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if ($usernameError = \Php22\Utils\Flash::get('username')): ?>
+        <div class="alert alert-danger">
+            <?php echo htmlspecialchars($usernameError, ENT_QUOTES, 'UTF-8'); ?>
+        </div>
+    <?php endif; ?>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="post" action="/users">
+                <label class="form-label" for="username">Username</label>
+                <input class="form-control" autofocus name="username" id="username" />
+                <button class="btn btn-sm btn-primary mt-2" type="submit">Submit</button>
+            </form>
+        </div>
+    </div>
+
     <ul>
         <?php foreach ($users as $user): ?>
             <li><?php echo htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8'); ?></li>
