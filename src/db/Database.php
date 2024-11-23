@@ -7,6 +7,16 @@ use PDO;
 class Database
 {
     private static $connection = null;
+    private $pdo;
+
+    public function __construct()
+    {
+        if (self::$connection === null) {
+            self::initializeConnection();
+        }
+
+        $this->pdo = self::$connection;
+    }
 
     /**
      * Get the database connection.
@@ -79,7 +89,7 @@ class Database
     }
 
     /**
-     * Initialize a new QueryBuilder instance.
+     * Initialize a new QueryBuilder instance (static method).
      *
      * @param string $table
      * @return QueryBuilder
@@ -88,6 +98,18 @@ class Database
     {
         $pdo = self::getConnection();
         $queryBuilder = new QueryBuilder($pdo);
+        return $queryBuilder->table($table);
+    }
+
+    /**
+     * Create a new QueryBuilder instance (non-static method).
+     *
+     * @param string $table
+     * @return QueryBuilder
+     */
+    public function tbl(string $table): QueryBuilder
+    {
+        $queryBuilder = new QueryBuilder($this->pdo);
         return $queryBuilder->table($table);
     }
 }
