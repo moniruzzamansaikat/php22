@@ -11,7 +11,7 @@ class Flash
      * @param mixed $message
      * @return void
      */
-    public static function set(string $key, mixed $message)
+    public function set(string $key, mixed $message)
     {
         if (!isset($_SESSION)) {
             session_start();
@@ -26,7 +26,7 @@ class Flash
      * @param string $key
      * @return mixed
      */
-    public static function get(string $key): mixed
+    public function get(string $key): mixed
     {
         if (!isset($_SESSION)) {
             session_start();

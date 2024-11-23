@@ -69,6 +69,6 @@ class Validator
             $array[] = $error;
         }
 
-        Flash::set($this->errorsKey, $array);
+        flash()->set($this->errorsKey, $array);
     }
 }

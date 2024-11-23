@@ -4,8 +4,6 @@ namespace Php22\Controllers;
 
 use Php22\Db\Database;
 use Php22\Http\Request;
-use Php22\Utils\Flash;
-use Php22\Utils\Validator;
 
 class UserController extends BaseController
 {
@@ -38,7 +36,7 @@ class UserController extends BaseController
             'password' => password_hash($data['password'], PASSWORD_DEFAULT),
         ]);
 
-        Flash::set('success', 'User added successfully!');
+        flash()->set('success', 'User added successfully!');
         $this->redirect('/users');
     }
 }

@@ -3,19 +3,19 @@
 #section('content')
 <h2>{{ $appName }}</h2>
 
-    #if ($message = Php22\Utils\Flash::get('success'))
+    #if ($message = flash()->get('success'))
         <div class="alert alert-success">
             {{ $message }}
         </div>
     #endif
 
-    #if ($message = Php22\Utils\Flash::get('username'))
+    #if ($message = flash()->get('username'))
         <div class="alert alert-danger">
             {{ $message }}
         </div>
     #endif
 
-    #if ($errors = Php22\Utils\Flash::get('errors'))
+    #if ($errors = flash()->get('errors'))
         <div class="alert alert-danger">
             <ul>
                 #foreach ($errors as $field => $message)
