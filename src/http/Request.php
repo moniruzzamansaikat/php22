@@ -2,6 +2,8 @@
 
 namespace Php22\Http;
 
+use Php22\Utils\Validator;
+
 class Request
 {
     /**
@@ -79,5 +81,27 @@ class Request
     {
         $headers = getallheaders();
         return $headers[$key] ?? $default;
+    }
+
+    /**
+     * Validate the input data using the given rules.
+     *
+     * @param array $rules Validation rules (e.g., ['username' => 'required']).
+     * @return array The validated data.
+     */
+    public function validate(array $rules): array
+    {
+        $validator = new Validator();
+        
+        $data = $this->all(); 
+        $validator->validate($rules, $data);
+        
+        if (!$validator->passes()) {
+            $validator->flashErrors();
+            header('Location: /users'); 
+            exit();
+        }
+
+        return $data; 
     }
 }

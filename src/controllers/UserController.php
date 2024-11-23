@@ -26,21 +26,12 @@ class UserController extends BaseController
         $this->render('users/create');
     }
 
-    public function store(Request $request, Validator $validator)
+    public function store(Request $request)
     {
-        $rules = [
+        $data = $request->validate([
             'username' => 'required',
             'password' => 'required',
-        ];
-
-        $data = $request->all();
-
-        $validator->validate($rules, $data);
-
-        if (!$validator->passes()) {
-            $validator->flashErrors();
-            $this->redirect('/users');
-        }
+        ]);
 
         Database::table('users')->insert([
             'username' => $data['username'],
