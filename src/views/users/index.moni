@@ -1,23 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
+#extends('layouts/main')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $appName }}</title>
-</head>
-
-<body>
-    <h1>Users List</h1>
+#section('content')
+    <h2>User List X</h2>
     <ul>
         #foreach ($users as $user)
             <li>{{ $user['name'] }}</li>
         #endforeach
     </ul>
 
-    #if (count($users) === 0 && true && (1 - 1 == 0))
-        <p>No users found.</p>
+    #if (count($users) === 0)
+        <p>No users found.</p> 
     #endif
-</body>
-
-</html>
+#endsection
