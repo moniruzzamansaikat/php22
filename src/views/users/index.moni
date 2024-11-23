@@ -3,17 +3,25 @@
 #section('content')
 <h2>{{ $appName }}</h2>
 
-    #if ($successMessage = Php22\Utils\Flash::get('success'))
+    #if ($message = Php22\Utils\Flash::get('success'))
         <div class="alert alert-success">
-            {{ $successMessage }}
+            {{ $message }}
         </div>
     #endif
 
-    #if ($usernameError = \Php22\Utils\Flash::get('username'))
+    #if ($message = Php22\Utils\Flash::get('username'))
         <div class="alert alert-danger">
-            {{ $usernameError }}
+            {{ $message }}
         </div>
     #endif
+
+    #if ($message = Php22\Utils\Flash::get('password'))
+        <div class="alert alert-danger">
+            {{ $message }}
+        </div>
+    #endif
+
+
 
     <div class="card mb-3">
         <div class="card-body">

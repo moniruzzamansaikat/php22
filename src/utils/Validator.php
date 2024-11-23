@@ -7,17 +7,32 @@ class Validator
     private $errors = [];
 
     /**
-     * Validate that a field is not empty.
+     * Validate a single field is not empty.
      *
      * @param string $field
-     * @param string $value
+     * @param string|null $value
      * @param string $message
-     * @return void
      */
     public function required(string $field, ?string $value, string $message = 'This field is required.')
     {
         if (empty($value)) {
             $this->errors[$field] = $message;
+        }
+    }
+
+    /**
+     * Validate multiple fields using rules.
+     *
+     * @param array $fields Array of fields and rules. Example: ['username' => 'required', 'password' => 'required']
+     * @param array $data The input data to validate.
+     */
+    public function validate(array $fields, array $data)
+    {
+        foreach ($fields as $field => $rule) {
+            if ($rule === 'required') {
+                $this->required($field, $data[$field] ?? null, ucfirst($field) . ' is required.');
+            }
+            // Add more validation rules as needed (e.g., email, min, max, etc.)
         }
     }
 
@@ -32,7 +47,7 @@ class Validator
     }
 
     /**
-     * Check if the validation passed.
+     * Check if validation passed.
      *
      * @return bool
      */

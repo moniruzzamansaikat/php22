@@ -28,8 +28,14 @@ class UserController extends BaseController
 
     public function store(Request $request, Validator $validator)
     {
-        $username = $request->input('username');
-        $validator->required('username', $username, 'Username is required.');
+        $rules = [
+            'username' => 'required',
+            'password' => 'required',
+        ];
+
+        $data = $request->all();
+
+        $validator->validate($rules, $data);
 
         if (!$validator->passes()) {
             foreach ($validator->errors() as $field => $error) {
@@ -40,7 +46,8 @@ class UserController extends BaseController
         }
 
         Database::table('users')->insert([
-            'username' => $username,
+            'username' => $data['username'],
+            'password' => password_hash($data['password'], PASSWORD_DEFAULT),
         ]);
 
         Flash::set('success', 'User added successfully!');
