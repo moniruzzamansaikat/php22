@@ -50,6 +50,9 @@ class Router
     public function dispatch()
     {
         $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        $scriptName = dirname($_SERVER['SCRIPT_NAME']);
+        $requestUri = '/' . trim(str_replace($scriptName, '', $requestUri), '/');
+
         $requestMethod = $_SERVER['REQUEST_METHOD'];
 
         foreach ($this->routes as $route) {
@@ -97,11 +100,15 @@ class Router
      */
     private function convertUriToRegex(string $uri): string
     {
-        $pattern = preg_replace_callback('/\{([a-zA-Z0-9_]+)(:[^\}]+)?\}/', function ($matches) {
+        // Escape special regex characters, except for braces and slashes
+        $escapedUri = preg_replace('/[.\\+*?[^\\]$()|]/', '\\\\$0', $uri);
+
+        // Replace parameter placeholders with regex patterns
+        $pattern = preg_replace_callback('/\{([a-zA-Z0-9_]+)(:([^}]+))?\}/', function ($matches) {
             $paramName = $matches[1];
-            $paramPattern = isset($matches[2]) ? substr($matches[2], 1) : '[^/]+';
+            $paramPattern = isset($matches[3]) ? $matches[3] : '[^/]+';
             return '(?P<' . $paramName . '>' . $paramPattern . ')';
-        }, $uri);
+        }, $escapedUri);
 
         return '#^' . $pattern . '$#';
     }
@@ -169,7 +176,6 @@ class Router
         // Call the controller method with resolved dependencies
         echo $reflection->invokeArgs($controller, $dependencies);
     }
-
 
     /**
      * Filter parameter value based on reflection parameter type.
