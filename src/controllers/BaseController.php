@@ -2,6 +2,7 @@
 
 namespace Php22\Controllers;
 
+use Php22\Config\Config;
 use Php22\Db\Database;
 use Php22\TemplateEngine;
 
@@ -14,10 +15,13 @@ abstract class BaseController
 
     public function __construct()
     {
+        $config = Config::load('views');
+
         $this->templateEngine = new TemplateEngine(
-            __DIR__ . '/../views',  // Path to views folder
-            __DIR__ . '/../cache'  // Path to cache folder
+            $config['views_path'],  // Dynamically resolved views path
+            $config['cache_path']   // Dynamically resolved cache path
         );
+
 
         $this->db = Database::getConnection();
     }
