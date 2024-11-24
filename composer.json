@@ -1,6 +1,14 @@
 {
-    "version": "1.0.0",
-    "name": "php22/framework",
+    "name": "monirsaikat/php22",
+    "description": "A lightweight PHP framework for custom applications.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Moniruzzaman Saikat",
+            "email": "monirsaikat1@gmail.com"
+        }
+    ],
     "autoload": {
         "psr-4": {
             "Php22\\": "src/"
