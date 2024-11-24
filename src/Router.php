@@ -13,6 +13,63 @@ class Router
     private $fallback;
     private $routeCache = [];
 
+    // New class properties for flexibility
+    private $basePath = '/';
+    private $controllerNamespace = '';
+    private $requestMethod;
+    private $requestUri;
+    private $globalMiddleware = [];
+
+    /**
+     * Set the base path for the router.
+     *
+     * @param string $basePath
+     */
+    public function setBasePath(string $basePath)
+    {
+        $this->basePath = rtrim($basePath, '/') . '/';
+    }
+
+    /**
+     * Set the default namespace for controllers.
+     *
+     * @param string $namespace
+     */
+    public function setControllerNamespace(string $namespace)
+    {
+        $this->controllerNamespace = rtrim($namespace, '\\') . '\\';
+    }
+
+    /**
+     * Set the request method manually (useful for testing).
+     *
+     * @param string $method
+     */
+    public function setRequestMethod(string $method)
+    {
+        $this->requestMethod = strtoupper($method);
+    }
+
+    /**
+     * Set the request URI manually (useful for testing).
+     *
+     * @param string $uri
+     */
+    public function setRequestUri(string $uri)
+    {
+        $this->requestUri = $uri;
+    }
+
+    /**
+     * Add global middleware to be applied to all routes.
+     *
+     * @param array $middlewareClasses
+     */
+    public function setGlobalMiddleware(array $middlewareClasses)
+    {
+        $this->globalMiddleware = $middlewareClasses;
+    }
+
     /**
      * Add a route.
      *
@@ -25,7 +82,7 @@ class Router
     public function addRoute($methods, string $uri, $action, string $name = null, array $middleware = [])
     {
         $methods = (array)$methods;
-        $uri = $this->applyGroupPrefix($uri);
+        $uri = $this->basePath . ltrim($this->applyGroupPrefix($uri), '/');
         $middleware = array_merge($this->middleware, $middleware);
 
         $route = [
@@ -49,11 +106,11 @@ class Router
      */
     public function dispatch()
     {
-        $requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        $requestUri = $this->requestUri ?? parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         $scriptName = dirname($_SERVER['SCRIPT_NAME']);
         $requestUri = '/' . trim(str_replace($scriptName, '', $requestUri), '/');
 
-        $requestMethod = $_SERVER['REQUEST_METHOD'];
+        $requestMethod = $this->requestMethod ?? $_SERVER['REQUEST_METHOD'];
 
         foreach ($this->routes as $route) {
             if (!in_array($requestMethod, $route['methods'])) {
@@ -63,8 +120,11 @@ class Router
             if (preg_match($route['regex'], $requestUri, $matches)) {
                 $params = array_intersect_key($matches, array_flip($route['parameters']));
 
+                // Apply global middleware
+                $allMiddleware = array_merge($this->globalMiddleware, $route['middleware']);
+
                 // Apply middleware
-                foreach ($route['middleware'] as $middlewareClass) {
+                foreach ($allMiddleware as $middlewareClass) {
                     $middleware = new $middlewareClass();
                     if (method_exists($middleware, 'handle')) {
                         $response = $middleware->handle($params);
@@ -135,6 +195,10 @@ class Router
     private function dispatchController(array $action, array $params)
     {
         [$controllerClass, $method] = $action;
+
+        if (strpos($controllerClass, '\\') === false) {
+            $controllerClass = $this->controllerNamespace . $controllerClass;
+        }
 
         if (!class_exists($controllerClass)) {
             throw new \Exception("Controller class {$controllerClass} does not exist.");
@@ -265,49 +329,33 @@ class Router
         return $uri;
     }
 
-    /**
-     * Register a GET route.
-     */
+    // Shortcut methods for adding routes with specific HTTP methods
+
     public function get(string $uri, $action, string $name = null, array $middleware = [])
     {
         $this->addRoute('GET', $uri, $action, $name, $middleware);
     }
 
-    /**
-     * Register a POST route.
-     */
     public function post(string $uri, $action, string $name = null, array $middleware = [])
     {
         $this->addRoute('POST', $uri, $action, $name, $middleware);
     }
 
-    /**
-     * Register a PUT route.
-     */
     public function put(string $uri, $action, string $name = null, array $middleware = [])
     {
         $this->addRoute('PUT', $uri, $action, $name, $middleware);
     }
 
-    /**
-     * Register a DELETE route.
-     */
     public function delete(string $uri, $action, string $name = null, array $middleware = [])
     {
         $this->addRoute('DELETE', $uri, $action, $name, $middleware);
     }
 
-    /**
-     * Register a PATCH route.
-     */
     public function patch(string $uri, $action, string $name = null, array $middleware = [])
     {
         $this->addRoute('PATCH', $uri, $action, $name, $middleware);
     }
 
-    /**
-     * Register any HTTP method route.
-     */
     public function any(string $uri, $action, string $name = null, array $middleware = [])
     {
         $this->addRoute(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], $uri, $action, $name, $middleware);
