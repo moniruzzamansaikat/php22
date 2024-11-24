@@ -34,6 +34,11 @@ function hash_password(string $password)
     return password_hash($password, PASSWORD_DEFAULT);
 }
 
+function route($routeName, ...$params)
+{
+    return router()->route($routeName, ...$params);
+}
+
 /**
  * Resolve the base path dynamically based on the entry point.
  *
