@@ -39,3 +39,28 @@ function base_path(string $path = ''): string
     $basePath = realpath($_SERVER['DOCUMENT_ROOT'] . '/../');
     return $path ? $basePath . DIRECTORY_SEPARATOR . $path : $basePath;
 }
+
+
+function debug(...$vars): void
+{
+    echo '<style>
+        pre.debug-output {
+            background: #282c34;
+            color: #61dafb;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+    </style>';
+
+    echo '<pre class="debug-output">';
+    foreach ($vars as $var) {
+        // Use print_r for better structure and formatting
+        echo htmlspecialchars(print_r($var, true));
+    }
+    echo '</pre>';
+    exit(1); // Terminate script execution
+}
