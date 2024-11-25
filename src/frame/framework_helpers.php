@@ -2,7 +2,32 @@
 
 use Php22\Container;
 use Php22\Db\Database;
+use Php22\Http\Request;
 use Php22\Utils\Flash;
+use Php22\Utils\Session;
+
+function request(): Request
+{
+    return new Request();
+}
+
+function csrf_token()
+{
+    if (!Session::has('_csrf_token')) {
+        Session::set('_csrf_token', bin2hex(openssl_random_pseudo_bytes(10)));
+    }
+
+    $token = bin2hex(openssl_random_pseudo_bytes(10));
+
+    Session::set('_csrf_token', $token);
+
+    return $token;
+}
+
+function csrf_field()
+{
+    return '<input type="hidden" name="_token" value="' . csrf_token() . '" />';
+}
 
 function app(): \Php22\Application
 {

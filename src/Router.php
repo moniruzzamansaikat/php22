@@ -2,6 +2,7 @@
 
 namespace Php22;
 
+use Php22\http\Middleware\CsrfMiddleware;
 use ReflectionMethod;
 
 class Router
@@ -18,7 +19,7 @@ class Router
     private $controllerNamespace = '';
     private $requestMethod;
     private $requestUri;
-    private $globalMiddleware = [];
+    private $globalMiddleware = [CsrfMiddleware::class];
 
     /**
      * Set the base path for the router.
