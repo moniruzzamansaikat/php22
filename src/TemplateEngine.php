@@ -71,6 +71,9 @@ class TemplateEngine
             return "<?php echo htmlspecialchars({$variable}, ENT_QUOTES, 'UTF-8'); ?>";
         }, $content);
 
+        // csrf() helper
+        $content = preg_replace('/#csrf\(\)/', "<?php echo csrf_field(); ?>", $content);
+
         // 3. Replace #if/#elseif/#else/#endif for conditionals
         $content = preg_replace_callback('/#if\s*\(([^()]*+(?:\((?1)\)[^()]*+)*?)\)/', function ($matches) {
             $condition = trim($matches[1]);
