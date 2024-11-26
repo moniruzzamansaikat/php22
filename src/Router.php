@@ -23,6 +23,8 @@ class Router
 
     private $temporaryGroupAttributes = [];
 
+    private $currentController = '';
+
 
     /**
      * Set the base path for the router.
@@ -88,6 +90,11 @@ class Router
         $methods = (array)$methods;
         $uri = $this->basePath . ltrim($this->applyGroupPrefix($uri), '/');
         $middleware = array_merge($this->middleware, $middleware);
+
+        // If action is a string and currentController is set, prepend it
+        if (is_string($action) && $this->currentController) {
+            $action = [$this->currentController, $action];
+        }
 
         $route = [
             'methods' => $methods,
@@ -331,6 +338,12 @@ class Router
         $uri = preg_replace('/\{[a-zA-Z0-9_]+(\:[^\}]+)?\}/', '', $uri);
 
         return $uri;
+    }
+
+    public function controller(string $controllerName)
+    {
+        $this->currentController = $this->controllerNamespace . rtrim($controllerName, '\\');
+        return $this;
     }
 
     // Shortcut methods for adding routes with specific HTTP methods
