@@ -21,9 +21,7 @@ class Router
     private $globalMiddleware = [CsrfMiddleware::class];
 
     private $temporaryGroupAttributes = [];
-
-    private $currentController = '';
-
+    private $currentController = null;
 
     public function setBasePath(string $basePath)
     {
@@ -56,16 +54,17 @@ class Router
         $uri = $this->basePath . ltrim($this->applyGroupPrefix($uri), '/');
         $middleware = array_merge($this->middleware, $middleware);
 
+        // Handle controller action
         if (is_string($action) && $this->currentController) {
             $action = [$this->currentController, $action];
         }
 
         $route = [
-            'methods' => $methods,
-            'uri' => $uri,
-            'action' => $action,
+            'methods'    => $methods,
+            'uri'        => $uri,
+            'action'     => $action,
             'middleware' => $middleware,
-            'regex' => $this->convertUriToRegex($uri),
+            'regex'      => $this->convertUriToRegex($uri),
             'parameters' => $this->extractParameters($uri),
         ];
 
@@ -95,7 +94,6 @@ class Router
                 // Apply global middleware
                 $allMiddleware = array_merge($this->globalMiddleware, $route['middleware']);
 
-                // Apply middleware
                 foreach ($allMiddleware as $middlewareClass) {
                     $middleware = new $middlewareClass();
                     if (method_exists($middleware, 'handle')) {
@@ -126,10 +124,7 @@ class Router
 
     private function convertUriToRegex(string $uri): string
     {
-        // Escape special regex characters, except for braces and slashes
         $escapedUri = preg_replace('/[.\\+*?[^\\]$()|]/', '\\\\$0', $uri);
-
-        // Replace parameter placeholders with regex patterns
         $pattern = preg_replace_callback('/\{([a-zA-Z0-9_]+)(:([^}]+))?\}/', function ($matches) {
             $paramName = $matches[1];
             $paramPattern = isset($matches[3]) ? $matches[3] : '[^/]+';
@@ -163,7 +158,6 @@ class Router
             throw new \Exception("Method {$method} does not exist in controller {$controllerClass}.");
         }
 
-        // Use Reflection to resolve method parameters
         $reflection = new ReflectionMethod($controller, $method);
         $dependencies = [];
 
@@ -172,10 +166,8 @@ class Router
             $type = $parameter->getType();
 
             if (isset($params[$name])) {
-                // Use parameters from the route
                 $dependencies[] = $this->filterParameter($params[$name], $parameter);
             } elseif ($type && !$type->isBuiltin()) {
-                // Attempt to resolve class dependencies
                 $className = $type->getName();
                 if (class_exists($className)) {
                     $dependencies[] = new $className();
@@ -183,14 +175,12 @@ class Router
                     throw new \Exception("Cannot resolve class {$className} for parameter \${$name}.");
                 }
             } elseif ($parameter->isDefaultValueAvailable()) {
-                // Use default value if available
                 $dependencies[] = $parameter->getDefaultValue();
             } else {
                 throw new \Exception("Cannot resolve parameter '{$name}' for method {$method}.");
             }
         }
 
-        // Call the controller method with resolved dependencies
         echo $reflection->invokeArgs($controller, $dependencies);
     }
 
@@ -206,11 +196,33 @@ class Router
 
     private function applyGroupPrefix(string $uri): string
     {
-        if (!empty($this->currentGroup['prefix'])) {
-            return rtrim($this->currentGroup['prefix'], '/') . '/' . ltrim($uri, '/');
+        // Get the current group prefix, default to an empty string if not set
+        $prefix = $this->currentGroup['prefix'] ?? '';
+        // Remove any trailing slashes from the prefix
+        $prefix = rtrim($prefix, '/');
+
+        // Remove any leading slashes from the URI
+        $trimmedUri = ltrim($uri, '/');
+
+        // If both the prefix and URI are empty, the route is '/'
+        if ($prefix === '' && ($uri === '' || $uri === '/')) {
+            return '/';
         }
-        return $uri;
+
+        // If the URI is empty or '/', return the prefix
+        if ($uri === '' || $uri === '/') {
+            return $prefix === '' ? '/' : $prefix;
+        }
+
+        // If the prefix is empty, return the URI with a leading '/'
+        if ($prefix === '') {
+            return '/' . $trimmedUri;
+        }
+
+        // In all other cases, concatenate the prefix and URI with a '/'
+        return $prefix . '/' . $trimmedUri;
     }
+
 
     public function fallback(callable $action)
     {
@@ -220,17 +232,20 @@ class Router
     public function group(callable $callback)
     {
         $parentGroup = $this->currentGroup;
+        $parentController = $this->currentController;
+
         $this->currentGroup = array_merge($this->currentGroup, $this->temporaryGroupAttributes);
 
         if (isset($this->temporaryGroupAttributes['middleware'])) {
             $this->middleware = array_merge($this->middleware, $this->temporaryGroupAttributes['middleware']);
         }
 
-        $this->temporaryGroupAttributes = []; // Reset temporary attributes
+        $this->temporaryGroupAttributes = [];
         $callback($this);
 
         $this->currentGroup = $parentGroup;
         $this->middleware = [];
+        $this->currentController = $parentController;
     }
 
     public function route(string $name, array $params = []): string
@@ -245,7 +260,6 @@ class Router
             $uri = preg_replace('/\{' . $key . '(:[^\}]+)?\}/', $value, $uri);
         }
 
-        // Remove any optional parameters not provided
         $uri = preg_replace('/\{[a-zA-Z0-9_]+(\:[^\}]+)?\}/', '', $uri);
 
         return $uri;
