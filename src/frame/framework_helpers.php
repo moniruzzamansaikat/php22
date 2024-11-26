@@ -34,6 +34,10 @@ function app(): \Php22\Application
     return Container::getInstance()->resolve('app');
 }
 
+function templateEngine() {
+    return Container::getInstance()->resolve('templateEngine');
+}
+
 function router(): \Php22\Router
 {
     return Container::getInstance()->resolve('router');

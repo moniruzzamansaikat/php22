@@ -28,25 +28,21 @@ class Application
      */
     private function registerServices()
     {
-        // Register Router
         $this->container->bind('router', function () {
             return new Router();
         });
 
-        // Register Template Engine
-        $this->container->bind('templateEngine', function () {
-            $config = $this->container->resolve('config');
-            return new TemplateEngine($config['views_path'], $config['cache_path']);
-        });
-
-        // Register Database
         $this->container->bind('db', function () {
             return new \Php22\Db\Database();
         });
 
-        // Register Configuration
         $this->container->bind('config', function () {
             return require base_path('config/framework.php');
+        });
+
+        $this->container->bind('templateEngine', function () {
+            $config = $this->container->resolve('config');
+            return new TemplateEngine($config['views_path'], $config['cache_path']);
         });
     }
 

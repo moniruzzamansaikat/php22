@@ -14,6 +14,11 @@ class TemplateEngine
     public $cacheExtension = '.php'; // Default cache file extension
     public $csrfPlaceholder = '#csrf()'; // Placeholder for CSRF token
 
+    public function getViewPath()
+    {
+        return $this->viewPath;
+    }
+
     public function __construct($viewPath, $cachePath)
     {
         $this->viewPath = rtrim($viewPath, '/');
@@ -145,5 +150,26 @@ class TemplateEngine
             $sectionName = $matches[1];
             return $this->sections[$sectionName] ?? ''; // Replace with section content or leave empty
         }, $layoutContent);
+    }
+
+    public function renderFromCore($view, $data = [], $viewPathOverride = null)
+    {
+        $viewPath = $viewPathOverride ?? $this->viewPath;
+        $viewFile = "{$viewPath}/{$view}{$this->templateExtension}";
+        $cachedFile = "{$this->cachePath}/core_{$view}.php";
+
+        if (!file_exists($viewFile)) {
+            throw new \Exception("View file '{$view}.moni' not found.");
+        }
+
+        if (!file_exists($cachedFile) || filemtime($viewFile) > filemtime($cachedFile)) {
+            $this->compile($viewFile, $cachedFile);
+        }
+
+        extract($data, EXTR_SKIP);
+
+        ob_start();
+        include $cachedFile;
+        return ob_get_clean();
     }
 }

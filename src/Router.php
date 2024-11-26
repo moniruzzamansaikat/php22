@@ -99,7 +99,7 @@ class Router
                     if (method_exists($middleware, 'handle')) {
                         $response = $middleware->handle($params);
                         if ($response !== null) {
-                            echo $response;
+                            $this->renderErrorTemplate(403, $response);
                             return;
                         }
                     }
@@ -114,13 +114,49 @@ class Router
             }
         }
 
-        if ($this->fallback) {
-            call_user_func($this->fallback);
+        // If no route matches, render the 404 error template
+        $this->renderErrorTemplate(404, "Page not found.");
+    }
+
+
+    private function renderErrorTemplate(int $statusCode, string $message)
+    {
+        http_response_code($statusCode);
+
+        // Define custom error templates
+        $errorTemplates = [
+            404 => 'errors/404',
+            403 => 'errors/403',
+            500 => 'errors/500',
+        ];
+
+        // Assuming the template engine is registered in the container
+        $templateEngine = templateEngine();
+        $frameworkErrorPath = __DIR__ . '/core/views/'; // Path to the framework's core views
+        $projectErrorPath = $templateEngine->getViewPath(); // Path to the user project's views
+
+        // Check for user project template first
+        $templatePath = isset($errorTemplates[$statusCode]) ? $errorTemplates[$statusCode] : null;
+
+        if (
+            $templatePath &&
+            file_exists($projectErrorPath . '/' . $templatePath . $templateEngine->templateExtension)
+        ) {
+            // Render from project views if available
+            echo $templateEngine->render($templatePath, ['message' => $message]);
+        } elseif (
+            $templatePath &&
+            file_exists($frameworkErrorPath . '/' . $templatePath . $templateEngine->templateExtension)
+        ) {
+            // Fallback to framework's core views
+            echo $templateEngine->renderFromCore($templatePath, ['message' => $message], $frameworkErrorPath);
         } else {
-            http_response_code(404);
-            echo "404 Not Found";
+            // Fallback to plain text if no template is found
+            echo "<h1>Error {$statusCode}</h1><p>{$message}</p>";
         }
     }
+
+
 
     private function convertUriToRegex(string $uri): string
     {
