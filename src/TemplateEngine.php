@@ -9,7 +9,10 @@ class TemplateEngine
     private $sections = [];
     private $currentSection = null;
 
-    public $layout = null;
+    public $layout = null; // Property for layout
+    public $templateExtension = '.moni'; // Default template extension
+    public $cacheExtension = '.php'; // Default cache file extension
+    public $csrfPlaceholder = '#csrf()'; // Placeholder for CSRF token
 
     public function __construct($viewPath, $cachePath)
     {
@@ -19,11 +22,11 @@ class TemplateEngine
 
     public function render($view, $data = [])
     {
-        $viewFile = "{$this->viewPath}/{$view}.moni";
-        $cachedFile = "{$this->cachePath}/{$view}.php";
+        $viewFile = "{$this->viewPath}/{$view}{$this->templateExtension}";
+        $cachedFile = "{$this->cachePath}/{$view}{$this->cacheExtension}";
 
         if (!file_exists($viewFile)) {
-            throw new \Exception("View file '{$view}.moni' not found.");
+            throw new \Exception("View file '{$view}{$this->templateExtension}' not found.");
         }
 
         if (!file_exists($cachedFile) || filemtime($viewFile) > filemtime($cachedFile)) {
@@ -57,9 +60,9 @@ class TemplateEngine
 
         // If a layout is defined, inject the content automatically
         if ($layout) {
-            $layoutFile = "{$this->viewPath}/{$layout}.moni";
+            $layoutFile = "{$this->viewPath}/{$layout}{$this->templateExtension}";
             if (!file_exists($layoutFile)) {
-                throw new \Exception("Layout file '{$layout}.moni' not found.");
+                throw new \Exception("Layout file '{$layout}{$this->templateExtension}' not found.");
             }
 
             $layoutContent = file_get_contents($layoutFile);
@@ -74,8 +77,8 @@ class TemplateEngine
             return "<?php echo htmlspecialchars({$variable}, ENT_QUOTES, 'UTF-8'); ?>";
         }, $content);
 
-        // Handle CSRF token
-        $content = preg_replace('/#csrf\(\)/', "<?php echo csrf_field(); ?>", $content);
+        // Handle CSRF token placeholder
+        $content = str_replace($this->csrfPlaceholder, "<?php echo csrf_field(); ?>", $content);
 
         // Handle conditionals
         $content = preg_replace_callback('/#if\s*\(([^()]*+(?:\((?1)\)[^()]*+)*?)\)/', function ($matches) {
@@ -125,8 +128,6 @@ class TemplateEngine
         $contentWithoutPhp = preg_replace('/#php(.*?)#\/php/s', '', $content);
         return trim($contentWithoutPhp);
     }
-
-
 
     private function processSections($content)
     {
