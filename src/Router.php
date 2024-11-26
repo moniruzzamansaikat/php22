@@ -14,7 +14,6 @@ class Router
     private $fallback;
     private $routeCache = [];
 
-    // New class properties for flexibility
     private $basePath = '/';
     private $controllerNamespace = '';
     private $requestMethod;
@@ -26,72 +25,37 @@ class Router
     private $currentController = '';
 
 
-    /**
-     * Set the base path for the router.
-     *
-     * @param string $basePath
-     */
     public function setBasePath(string $basePath)
     {
         $this->basePath = rtrim($basePath, '/') . '/';
     }
 
-    /**
-     * Set the default namespace for controllers.
-     *
-     * @param string $namespace
-     */
     public function setControllerNamespace(string $namespace)
     {
         $this->controllerNamespace = rtrim($namespace, '\\') . '\\';
     }
 
-    /**
-     * Set the request method manually (useful for testing).
-     *
-     * @param string $method
-     */
     public function setRequestMethod(string $method)
     {
         $this->requestMethod = strtoupper($method);
     }
 
-    /**
-     * Set the request URI manually (useful for testing).
-     *
-     * @param string $uri
-     */
     public function setRequestUri(string $uri)
     {
         $this->requestUri = $uri;
     }
 
-    /**
-     * Add global middleware to be applied to all routes.
-     *
-     * @param array $middlewareClasses
-     */
     public function setGlobalMiddleware(array $middlewareClasses)
     {
         $this->globalMiddleware = $middlewareClasses;
     }
 
-    /**
-     * Add a route.
-     *
-     * @param string|array $methods HTTP method(s) (e.g., 'GET', ['GET', 'POST']).
-     * @param string $uri The URI path (e.g., /users/{id}/delete).
-     * @param callable|array $action Callback or [Controller, method].
-     * @param string|null $name The name of the route.
-     * @param array $middleware Middleware to apply to the route.
-     */
     public function addRoute($methods, string $uri, $action, string $name = null, array $middleware = [])
     {
         $methods = (array)$methods;
         $uri = $this->basePath . ltrim($this->applyGroupPrefix($uri), '/');
         $middleware = array_merge($this->middleware, $middleware);
 
-        // If action is a string and currentController is set, prepend it
         if (is_string($action) && $this->currentController) {
             $action = [$this->currentController, $action];
         }
@@ -112,9 +76,6 @@ class Router
         }
     }
 
-    /**
-     * Dispatch the router.
-     */
     public function dispatch()
     {
         $requestUri = $this->requestUri ?? parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -163,12 +124,6 @@ class Router
         }
     }
 
-    /**
-     * Convert URI pattern to regex.
-     *
-     * @param string $uri
-     * @return string
-     */
     private function convertUriToRegex(string $uri): string
     {
         // Escape special regex characters, except for braces and slashes
@@ -184,25 +139,12 @@ class Router
         return '#^' . $pattern . '$#';
     }
 
-    /**
-     * Extract parameter names from URI.
-     *
-     * @param string $uri
-     * @return array
-     */
     private function extractParameters(string $uri): array
     {
         preg_match_all('/\{([a-zA-Z0-9_]+)(:[^\}]+)?\}/', $uri, $matches);
         return $matches[1];
     }
 
-    /**
-     * Dispatch a controller and method, resolving dependencies dynamically.
-     *
-     * @param array $action [Controller, method].
-     * @param array $params Parameters extracted from the URL.
-     * @throws \Exception
-     */
     private function dispatchController(array $action, array $params)
     {
         [$controllerClass, $method] = $action;
@@ -252,13 +194,6 @@ class Router
         echo $reflection->invokeArgs($controller, $dependencies);
     }
 
-    /**
-     * Filter parameter value based on reflection parameter type.
-     *
-     * @param mixed $value
-     * @param \ReflectionParameter $parameter
-     * @return mixed
-     */
     private function filterParameter($value, \ReflectionParameter $parameter)
     {
         $type = $parameter->getType();
@@ -269,12 +204,6 @@ class Router
         return $value;
     }
 
-    /**
-     * Apply group prefix to URI.
-     *
-     * @param string $uri
-     * @return string
-     */
     private function applyGroupPrefix(string $uri): string
     {
         if (!empty($this->currentGroup['prefix'])) {
@@ -283,22 +212,11 @@ class Router
         return $uri;
     }
 
-    /**
-     * Define a fallback route.
-     *
-     * @param callable $action
-     */
     public function fallback(callable $action)
     {
         $this->fallback = $action;
     }
 
-    /**
-     * Define a route group.
-     *
-     * @param array $attributes
-     * @param callable $callback
-     */
     public function group(callable $callback)
     {
         $parentGroup = $this->currentGroup;
@@ -314,14 +232,7 @@ class Router
         $this->currentGroup = $parentGroup;
         $this->middleware = [];
     }
-    /**
-     * Generate a URL for a named route.
-     *
-     * @param string $name
-     * @param array $params
-     * @return string
-     * @throws \Exception
-     */
+
     public function route(string $name, array $params = []): string
     {
         if (!isset($this->namedRoutes[$name])) {
@@ -345,8 +256,6 @@ class Router
         $this->currentController = $this->controllerNamespace . rtrim($controllerName, '\\');
         return $this;
     }
-
-    // Shortcut methods for adding routes with specific HTTP methods
 
     public function get(string $uri, $action, string $name = null, array $middleware = [])
     {
