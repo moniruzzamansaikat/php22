@@ -14,6 +14,9 @@ class TemplateEngine
     public $cacheExtension = '.php'; // Default cache file extension
     public $csrfPlaceholder = '#csrf()'; // Placeholder for CSRF token
 
+    private $assets = [];
+
+
     public function getViewPath()
     {
         return $this->viewPath;
@@ -57,6 +60,35 @@ class TemplateEngine
             return ob_get_clean();
         }, $content);
 
+        // Process asset blocks
+        $content = preg_replace_callback('/#assets\([\'"](.+?)[\'"]\)(.*?)#\/assets/s', function ($matches) {
+            $key = trim($matches[1]);
+            $assetContent = trim($matches[2]);
+
+            // Store the assets under the given key
+            if (!isset($this->assets[$key])) {
+                $this->assets[$key] = [];
+            }
+            $this->assets[$key][] = $assetContent;
+
+            return ''; // Remove the asset block from the compiled content
+        }, $content);
+
+        // debug($this->assets );
+
+
+        // Handle #loadAssets('key')
+        // $content = preg_replace_callback('/#loadAssets\([\'"](.+?)[\'"]\)/', function ($matches) {
+        //     $key = trim($matches[1]);
+
+        //     // Render all assets under the given key
+        //     if (isset($this->assets[$key])) {
+        //         return implode("\n", $this->assets[$key]);
+        //     }
+
+        //     return ''; // If no assets for the key, leave it empty
+        // }, $content);
+
         // Extract the layout if defined
         $layout = $this->layout ?? null;
 
@@ -74,6 +106,18 @@ class TemplateEngine
 
             // Inject the main content into the layout at #yield('content')
             $content = preg_replace('/#yield\([\'"]content[\'"]\)/', $mainContent, $layoutContent);
+
+            // Inject assets into the layout at #loadAssets('key')
+            $content = preg_replace_callback('/#loadAssets\([\'"](.+?)[\'"]\)/', function ($matches) {
+                $key = trim($matches[1]);
+
+                // Render all assets under the given key
+                if (isset($this->assets[$key])) {
+                    return implode("\n", $this->assets[$key]);
+                }
+
+                return ''; // If no assets for the key, leave it empty
+            }, $content);
         }
 
         // Handle {{ variable }} syntax
