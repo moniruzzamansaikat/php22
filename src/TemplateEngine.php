@@ -2,6 +2,12 @@
 
 namespace Php22;
 
+use Php22\TemplateEngine\TemplateBlocks\Assets;
+use Php22\TemplateEngine\TemplateBlocks\Conditionals;
+use Php22\TemplateEngine\TemplateBlocks\Loops;
+use Php22\TemplateEngine\TemplateBlocks\PhpBlock;
+use Php22\TemplateEngine\TemplateBlocks\Variable;
+
 class TemplateEngine
 {
     private $viewPath;
@@ -16,6 +22,8 @@ class TemplateEngine
 
     private $assets = [];
 
+    private $blocks = [];
+
 
     public function getViewPath()
     {
@@ -26,6 +34,14 @@ class TemplateEngine
     {
         $this->viewPath = rtrim($viewPath, '/');
         $this->cachePath = rtrim($cachePath, '/');
+
+        $this->blocks = [
+            Assets::class,
+            Variable::class,
+            Loops::class,
+            PhpBlock::class,
+            Conditionals::class
+        ];
     }
 
     public function render($view, $data = [])
@@ -74,20 +90,6 @@ class TemplateEngine
             return ''; // Remove the asset block from the compiled content
         }, $content);
 
-        // debug($this->assets );
-
-
-        // Handle #loadAssets('key')
-        // $content = preg_replace_callback('/#loadAssets\([\'"](.+?)[\'"]\)/', function ($matches) {
-        //     $key = trim($matches[1]);
-
-        //     // Render all assets under the given key
-        //     if (isset($this->assets[$key])) {
-        //         return implode("\n", $this->assets[$key]);
-        //     }
-
-        //     return ''; // If no assets for the key, leave it empty
-        // }, $content);
 
         // Extract the layout if defined
         $layout = $this->layout ?? null;
@@ -120,40 +122,12 @@ class TemplateEngine
             }, $content);
         }
 
-        // Handle {{ variable }} syntax
-        $content = preg_replace_callback('/{{\s*(.+?)\s*}}/', function ($matches) {
-            $variable = trim($matches[1]);
-            return "<?php echo htmlspecialchars({$variable}, ENT_QUOTES, 'UTF-8'); ?>";
-        }, $content);
+        foreach ($this->blocks as $block) {
+            $content = (new $block($content))->handleBlock();
+        }
 
         // Handle CSRF token placeholder
         $content = str_replace($this->csrfPlaceholder, "<?php echo csrf_field(); ?>", $content);
-
-        // Handle conditionals
-        $content = preg_replace_callback('/#if\s*\(([^()]*+(?:\((?1)\)[^()]*+)*?)\)/', function ($matches) {
-            $condition = trim($matches[1]);
-            return "<?php if ({$condition}): ?>";
-        }, $content);
-
-        $content = preg_replace_callback('/#elseif\s*\(([^()]*+(?:\((?1)\)[^()]*+)*?)\)/', function ($matches) {
-            $condition = trim($matches[1]);
-            return "<?php elseif ({$condition}): ?>";
-        }, $content);
-
-        $content = preg_replace('/#else/', '<?php else: ?>', $content);
-        $content = preg_replace('/#endif/', '<?php endif; ?>', $content);
-
-        // Handle PHP blocks
-        $content = preg_replace('/^\s*#php\s*$/m', '<?php', $content);
-        $content = preg_replace('/^\s*#\/php\s*$/m', '?>', $content);
-
-        // Handle loops
-        $content = preg_replace_callback('/#foreach\s*\((.+?)\)/', function ($matches) {
-            $loop = trim($matches[1]);
-            return "<?php foreach ({$loop}): ?>";
-        }, $content);
-
-        $content = preg_replace('/#endforeach/', '<?php endforeach; ?>', $content);
 
         // Ensure the cache directory exists
         $cachedDir = dirname($cachedFile);
