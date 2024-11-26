@@ -159,7 +159,7 @@ class TemplateEngine
         $cachedFile = "{$this->cachePath}/core_{$view}.php";
 
         if (!file_exists($viewFile)) {
-            throw new \Exception("View file '{$view}.moni' not found.");
+            throw new \Exception("View file '{$view}{$this->templateExtension}' not found.");
         }
 
         if (!file_exists($cachedFile) || filemtime($viewFile) > filemtime($cachedFile)) {
