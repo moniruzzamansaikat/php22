@@ -1,0 +1,9 @@
+#!/usr/bin/env php
+<?php
+
+require_once __DIR__ . '/vendor/autoload.php'; // Ensure autoload is set up
+
+use Php22\CLI\Application;
+
+$app = new Application();
+$app->run($argv);

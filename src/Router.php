@@ -21,6 +21,9 @@ class Router
     private $requestUri;
     private $globalMiddleware = [CsrfMiddleware::class];
 
+    private $temporaryGroupAttributes = [];
+
+
     /**
      * Set the base path for the router.
      *
@@ -289,21 +292,21 @@ class Router
      * @param array $attributes
      * @param callable $callback
      */
-    public function group(array $attributes, callable $callback)
+    public function group(callable $callback)
     {
         $parentGroup = $this->currentGroup;
-        $this->currentGroup = array_merge($this->currentGroup, $attributes);
+        $this->currentGroup = array_merge($this->currentGroup, $this->temporaryGroupAttributes);
 
-        if (isset($attributes['middleware'])) {
-            $this->middleware = array_merge($this->middleware, (array)$attributes['middleware']);
+        if (isset($this->temporaryGroupAttributes['middleware'])) {
+            $this->middleware = array_merge($this->middleware, $this->temporaryGroupAttributes['middleware']);
         }
 
+        $this->temporaryGroupAttributes = []; // Reset temporary attributes
         $callback($this);
 
         $this->currentGroup = $parentGroup;
         $this->middleware = [];
     }
-
     /**
      * Generate a URL for a named route.
      *
@@ -360,5 +363,21 @@ class Router
     public function any(string $uri, $action, string $name = null, array $middleware = [])
     {
         $this->addRoute(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], $uri, $action, $name, $middleware);
+    }
+
+    public function prefix(string $prefix)
+    {
+        $this->temporaryGroupAttributes['prefix'] = rtrim($prefix, '/');
+        return $this;
+    }
+
+    public function middleware($middleware)
+    {
+        $middleware = (array)$middleware;
+        $this->temporaryGroupAttributes['middleware'] = array_merge(
+            $this->temporaryGroupAttributes['middleware'] ?? [],
+            $middleware
+        );
+        return $this;
     }
 }
