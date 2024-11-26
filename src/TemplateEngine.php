@@ -6,8 +6,10 @@ class TemplateEngine
 {
     private $viewPath;
     private $cachePath;
-    private $sections = []; 
-    private $currentSection = null; 
+    private $sections = [];
+    private $currentSection = null;
+
+    public $layout = null;
 
     public function __construct($viewPath, $cachePath)
     {
@@ -40,26 +42,42 @@ class TemplateEngine
         // Load the view file content
         $content = file_get_contents($viewFile);
 
-        // 1. Handle #extends
-        if (preg_match('/#extends\([\'"](.+?)[\'"]\)/', $content, $matches)) {
-            $layoutFile = "{$this->viewPath}/{$matches[1]}.moni";
+        // Match any PHP code and execute it to handle layout assignment
+        $content = preg_replace_callback('/#php(.*?)#\/php/s', function ($matches) {
+            ob_start();
+            eval(trim($matches[1]));
+            return ob_get_clean();
+        }, $content);
+
+        // Extract the layout if defined
+        $layout = $this->layout ?? null;
+
+        // Detect the main content (outside #php blocks)
+        $mainContent = $this->extractMainContent($content);
+
+        // If a layout is defined, inject the content automatically
+        if ($layout) {
+            $layoutFile = "{$this->viewPath}/{$layout}.moni";
             if (!file_exists($layoutFile)) {
-                throw new \Exception("Layout file '{$matches[1]}.moni' not found.");
+                throw new \Exception("Layout file '{$layout}.moni' not found.");
             }
+
             $layoutContent = file_get_contents($layoutFile);
-            $content = preg_replace('/#extends\([\'"](.+?)[\'"]\)/', '', $content);
-            $content = $this->processSections($content);
-            $content = $this->injectSections($layoutContent, $content);
+
+            // Inject the main content into the layout at #yield('content')
+            $content = preg_replace('/#yield\([\'"]content[\'"]\)/', $mainContent, $layoutContent);
         }
 
-        // 2. Replace {{ variable }} syntax
+        // Handle {{ variable }} syntax
         $content = preg_replace_callback('/{{\s*(.+?)\s*}}/', function ($matches) {
             $variable = trim($matches[1]);
             return "<?php echo htmlspecialchars({$variable}, ENT_QUOTES, 'UTF-8'); ?>";
         }, $content);
 
+        // Handle CSRF token
         $content = preg_replace('/#csrf\(\)/', "<?php echo csrf_field(); ?>", $content);
 
+        // Handle conditionals
         $content = preg_replace_callback('/#if\s*\(([^()]*+(?:\((?1)\)[^()]*+)*?)\)/', function ($matches) {
             $condition = trim($matches[1]);
             return "<?php if ({$condition}): ?>";
@@ -73,10 +91,11 @@ class TemplateEngine
         $content = preg_replace('/#else/', '<?php else: ?>', $content);
         $content = preg_replace('/#endif/', '<?php endif; ?>', $content);
 
-        // php block start and end
+        // Handle PHP blocks
         $content = preg_replace('/^\s*#php\s*$/m', '<?php', $content);
         $content = preg_replace('/^\s*#\/php\s*$/m', '?>', $content);
-        
+
+        // Handle loops
         $content = preg_replace_callback('/#foreach\s*\((.+?)\)/', function ($matches) {
             $loop = trim($matches[1]);
             return "<?php foreach ({$loop}): ?>";
@@ -84,13 +103,30 @@ class TemplateEngine
 
         $content = preg_replace('/#endforeach/', '<?php endforeach; ?>', $content);
 
+        // Ensure the cache directory exists
         $cachedDir = dirname($cachedFile);
         if (!is_dir($cachedDir)) {
             mkdir($cachedDir, 0777, true); // Create directories recursively
         }
 
+        // Save compiled content
         file_put_contents($cachedFile, $content);
     }
+
+    /**
+     * Extract the main content outside of PHP blocks.
+     *
+     * @param string $content
+     * @return string
+     */
+    private function extractMainContent(string $content): string
+    {
+        // Remove all PHP blocks and return the rest as the main content
+        $contentWithoutPhp = preg_replace('/#php(.*?)#\/php/s', '', $content);
+        return trim($contentWithoutPhp);
+    }
+
+
 
     private function processSections($content)
     {
