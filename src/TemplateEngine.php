@@ -10,7 +10,7 @@ class TemplateEngine
     private $currentSection = null;
 
     public $layout = null; // Property for layout
-    public $templateExtension = '.moni'; // Default template extension
+    public $templateExtension = '.html'; // Default template extension
     public $cacheExtension = '.php'; // Default cache file extension
     public $csrfPlaceholder = '#csrf()'; // Placeholder for CSRF token
 
