@@ -73,6 +73,10 @@ class TemplateEngine
         $content = preg_replace('/#else/', '<?php else: ?>', $content);
         $content = preg_replace('/#endif/', '<?php endif; ?>', $content);
 
+        // php block start and end
+        $content = preg_replace('/^\s*#php\s*$/m', '<?php', $content);
+        $content = preg_replace('/^\s*#\/php\s*$/m', '?>', $content);
+        
         $content = preg_replace_callback('/#foreach\s*\((.+?)\)/', function ($matches) {
             $loop = trim($matches[1]);
             return "<?php foreach ({$loop}): ?>";
